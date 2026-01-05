@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Professional Image Resizer</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            background: var(--card-bg);
+            width: 100%;
+            max-width: 600px;
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        /* Upload Area */
+        .upload-area {
+            border: 2px dashed var(--border);
+            border-radius: 12px;
+            padding: 3rem 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .upload-area:hover, .upload-area.dragover {
+            border-color: var(--primary);
+            background-color: #eff6ff;
+        }
+
+        .upload-area input {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        /* Editor Section */
+        .editor {
+            display: none; /* Hidden by default */
+            margin-top: 2rem;
+            border-top: 1px solid var(--border);
+            padding-top: 2rem;
+        }
+
+        .preview-container {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .preview-img {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            background: #f1f5f9;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+        }
+
+        .stat-item strong {
+            display: block;
+            color: var(--text-main);
+        }
+
+        .stat-item span {
+            color: var(--text-muted);
+        }
+
+        /* Controls */
+        .control-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .control-group label {
+            display: flex;
+            justify-content: space-between;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            background: #e2e8f0;
+            border-radius: 5px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--primary);
+            cursor: pointer;
+            transition: background .15s ease-in-out;
+        }
+
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 0.85rem;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+            text-align: center;
+            text-decoration: none;
+        }
+
+        .btn:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .btn-secondary {
+            background-color: transparent;
+            color: var(--text-muted);
+            border: 1px solid var(--border);
+            margin-top: 10px;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #f1f5f9;
+            color: var(--text-main);
+        }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            .container { padding: 1.5rem; }
+            .stats { flex-direction: column; gap: 10px; text-align: center;}
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <h1>Image Resizer</h1>
+            <p>Compress and resize JPEGs instantly.</p>
+        </div>
+
+        <div class="upload-area" id="dropZone">
+            <span class="upload-icon">📂</span>
+            <h3>Click or Drag Image Here</h3>
+            <p style="color: var(--text-muted); margin-top: 5px; font-size: 0.85rem;">Supported formats: JPEG, PNG, WEBP</p>
+            <input type="file" id="fileInput" accept="image/jpeg, image/png, image/webp">
+        </div>
+
+        <div class="editor" id="editorScreen">
+            <div class="preview-container">
+                <img id="previewImage" class="preview-img" src="" alt="Preview">
+            </div>
+
+            <div class="stats">
+                <div class="stat-item">
+                    <strong>Original</strong>
+                    <span id="originalSize">0 KB</span>
+                </div>
+                <div class="stat-item">
+                    <strong>New Size</strong>
+                    <span id="newSize">0 KB</span>
+                </div>
+                <div class="stat-item">
+                    <strong>Reduction</strong>
+                    <span id="reductionPrc" style="color: var(--primary);">0%</span>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <label>
+                    Quality
+                    <span id="qualityValue">80%</span>
+                </label>
+                <input type="range" id="qualityRange" min="10" max="100" value="80">
+            </div>
+
+            <div class="control-group">
+                <label>
+                    Max Width (px)
+                    <span id="widthValue">1920px</span>
+                </label>
+                <input type="range" id="widthRange" min="500" max="4000" step="100" value="1920">
+            </div>
+
+            <a id="downloadBtn" class="btn" download="resized-image.jpg">Download Image</a>
+            <button id="resetBtn" class="btn btn-secondary">Upload Another</button>
+        </div>
+    </div>
+
+    <script>
+        const fileInput = document.getElementById('fileInput');
+        const dropZone = document.getElementById('dropZone');
+        const editorScreen = document.getElementById('editorScreen');
+        const previewImage = document.getElementById('previewImage');
+        const originalSizeSpan = document.getElementById('originalSize');
+        const newSizeSpan = document.getElementById('newSize');
+        const reductionPrcSpan = document.getElementById('reductionPrc');
+        const qualityRange = document.getElementById('qualityRange');
+        const qualityValue = document.getElementById('qualityValue');
+        const widthRange = document.getElementById('widthRange');
+        const widthValue = document.getElementById('widthValue');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const resetBtn = document.getElementById('resetBtn');
+
+        let originalFile = null;
+        let originalImage = new Image();
+
+        // 1. Format Bytes to KB/MB
+        function formatBytes(bytes, decimals = 2) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const dm = decimals < 0 ? 0 : decimals;
+            const sizes = ['Bytes', 'KB', 'MB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+        }
+
+        // 2. Handle File Upload
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) processFile(e.target.files[0]);
+        });
+
+        // Drag & Drop effects
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            if (e.dataTransfer.files.length > 0) processFile(e.dataTransfer.files[0]);
+        });
+
+        function processFile(file) {
+            if (!file.type.match(/image.*/)) return alert('Please upload an image file.');
+            
+            originalFile = file;
+            originalSizeSpan.textContent = formatBytes(file.size);
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                originalImage.src = e.target.result;
+                originalImage.onload = () => {
+                    dropZone.style.display = 'none';
+                    editorScreen.style.display = 'block';
+                    compressImage(); // Initial compression
+                };
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // 3. Compression Logic
+        function compressImage() {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+
+            // Resize logic
+            const maxWidth = parseInt(widthRange.value);
+            let width = originalImage.width;
+            let height = originalImage.height;
+
+            if (width > maxWidth) {
+                height = Math.round(height * (maxWidth / width));
+                width = maxWidth;
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+
+            // Draw image on canvas
+            ctx.drawImage(originalImage, 0, 0, width, height);
+
+            // Compress
+            const quality = parseInt(qualityRange.value) / 100;
+            
+            canvas.toBlob((blob) => {
+                if(!blob) return;
+
+                // Update UI stats
+                const newSize = blob.size;
+                newSizeSpan.textContent = formatBytes(newSize);
+                
+                // Calculate saving percentage
+                const saving = ((originalFile.size - newSize) / originalFile.size) * 100;
+                reductionPrcSpan.textContent = saving > 0 ? `-${Math.round(saving)}%` : '0%';
+
+                // Update Preview and Download Link
+                const url = URL.createObjectURL(blob);
+                previewImage.src = url;
+                downloadBtn.href = url;
+                
+                // Set filename
+                const nameParts = originalFile.name.split('.');
+                nameParts.pop(); // remove extension
+                downloadBtn.download = `${nameParts.join('.')}_compressed.jpg`;
+
+            }, 'image/jpeg', quality);
+        }
+
+        // 4. Event Listeners for Controls
+        qualityRange.addEventListener('input', (e) => {
+            qualityValue.textContent = `${e.target.value}%`;
+            compressImage();
+        });
+
+        widthRange.addEventListener('input', (e) => {
+            widthValue.textContent = `${e.target.value}px`;
+            compressImage();
+        });
+
+        resetBtn.addEventListener('click', () => {
+            editorScreen.style.display = 'none';
+            dropZone.style.display = 'block';
+            fileInput.value = '';
+            originalFile = null;
+        });
+
+    </script>
+</body>
+</html>
